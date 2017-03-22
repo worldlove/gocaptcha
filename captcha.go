@@ -8,7 +8,6 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
-	"io"
 	"io/ioutil"
 	"math"
 	"math/rand"
@@ -321,7 +320,6 @@ func (captcha *CaptchaImage) DrawText(text string) error {
 		//pt.Y += c.PointToFixed(*size * *spacing)
 		//pt.X += c.PointToFixed(*size);
 	}
-	draw.Draw(m, m.Bounds(), &image.Uniform{bgColor}, image.ZP, draw.Src)
 	return nil
 
 }
