@@ -14,49 +14,34 @@
 
 ##实例
 
-####使用：
+###使用：
 
 ```
-	go get github.com/lifei6671/gocaptcha/
+	go get github.com/worldlove/gocaptcha/
 ```
 
-####使用的类库
+###使用的类库
 
 ```
 	go get github.com/golang/freetype
 	go get github.com/golang/freetype/truetype
 	go get golang.org/x/image
 ```
-天朝可以去 http://www.golangtc.com/download/package 或 https://gopm.io 下载
-
-####代码
-具体实例可以查看example目录，有生成的验证码图片。
+###使用说明
 
 ```
-	
-  func Get(w http.ResponseWriter, r *http.Request) {
-      //初始化一个验证码对象
-		captchaImage,err := gocaptcha.NewCaptchaImage(dx,dy,gocaptcha.RandLightColor());
+//初始化配置
+func init() {
+	gocaptcha.ReadFonts("fonts", ".ttf") //配置字体目录
+	cap = gocaptcha.NewCaptchaImage(*image.RGBA) //配置背景色, 如果设置为nil, 则随机生成
+	cap.SetSize(128, 60) //配置图片大小(x, y)
+	cap.SetLine(1)       //配置干扰线条数
+	cap.SetDisturbance(gocaptcha.MEDIUM) //配置干扰级别
+}
 
-  	  //画上三条随机直线
-  	  captchaImage.Drawline(3);
+img, str := cap.Create(6, gocaptcha.ALL) //设置字符个数与字符类型 ALL=[:alnum:], NUM=[:digit:], ALPHA=[:alpha:], LOWER=[a-z], UPPER=[A-Z]
 
-  	  //画边框
-  	  captchaImage.DrawBorder(gocaptcha.ColorToRGB(0x17A7A7A));
-      
-  	  //画随机噪点
-  	  captchaImage.DrawNoise(gocaptcha.CaptchaComplexHigh);
-  
-  	  //画随机文字噪点
-  	  captchaImage.DrawTextNoise(gocaptcha.CaptchaComplexLower);
-      //画验证码文字，可以预先保持到Session种或其他储存容器种
-  	  captchaImage.DrawText(gocaptcha.RandText(4));
-    	if err != nil {
-    		  fmt.Println(err)
-    	}
-  	  //将验证码保持到输出流种，可以是文件或HTTP流等
-		  captchaImage.SaveImage(w,gocaptcha.ImageFormatJpeg);
-	}
+//...之后可自行处理图片和字符串
 
 ```
 
