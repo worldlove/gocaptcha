@@ -45,7 +45,8 @@ type CaptchaImage struct {
 	height  int
 	Complex int
 	line    int
-	bgColor color.RGBA
+	color   *color.RGBA
+	bgColor *color.RGBA
 }
 
 //获取指定目录下的所有文件，不进入下一级目录搜索，可以匹配后缀过滤。
@@ -70,11 +71,12 @@ func ReadFonts(dirPth string, suffix string) (err error) {
 }
 
 //新建一个图片对象
-func NewCaptchaImage(bgColor color.RGBA) *CaptchaImage {
+func NewCaptchaImage(bgColor *color.RGBA) *CaptchaImage {
 	return &CaptchaImage{
 		height:  0,
 		width:   0,
 		line:    0,
+		color:   bgColor,
 		bgColor: bgColor,
 	}
 }
@@ -215,6 +217,10 @@ func (captcha *CaptchaImage) DrawBorder(borderColor color.RGBA) *CaptchaImage {
 
 //画噪点
 func (captcha *CaptchaImage) DrawNoise(complex int) *CaptchaImage {
+	if captcha.color == nil {
+		color := RandLightColor()
+		captcha.bgColor = &color
+	}
 	captcha.nrgba = image.NewNRGBA(image.Rect(0, 0, captcha.width, captcha.height))
 	draw.Draw(captcha.nrgba, captcha.nrgba.Bounds(), &image.Uniform{captcha.bgColor}, image.ZP, draw.Src)
 	density := 18
@@ -300,11 +306,11 @@ func (captcha *CaptchaImage) DrawText(text string) error {
 	c.SetDst(captcha.nrgba)
 	c.SetHinting(font.HintingFull)
 
-	fontWidth := captcha.width / len(text)
+	fontWidth := captcha.width/len(text) - 1
 
 	for i, s := range text {
 
-		fontSize := float64(captcha.height) / (1 + float64(r.Intn(7))/float64(9))
+		fontSize := float64(captcha.height)/(1+float64(r.Intn(7))/float64(9)) - 2
 
 		c.SetSrc(image.NewUniform(RandDeepColor()))
 		c.SetFontSize(fontSize)
@@ -358,9 +364,9 @@ func RandDeepColor() color.RGBA {
 //随机生成浅色
 func RandLightColor() color.RGBA {
 
-	red := r.Intn(55) + 200
-	green := r.Intn(55) + 200
-	blue := r.Intn(55) + 200
+	red := r.Intn(100) + 155
+	green := r.Intn(100) + 155
+	blue := r.Intn(100) + 155
 	return color.RGBA{R: uint8(red), G: uint8(green), B: uint8(blue), A: uint8(255)}
 }
 
