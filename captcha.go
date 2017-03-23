@@ -22,13 +22,21 @@ var (
 	FontFamily []string = make([]string, 0)
 )
 
-const txtChars = "AaCcDdEeFfGgHhJjKkLMmNnPpQqRrSsTtUuVvWwXxYtZ2346789"
+const ALNUM = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
 
 const (
 	//验证码噪点强度
-	LOWER = iota
+	NORMAL = iota
 	MEDIUM
 	HIGH
+)
+
+const (
+	ALL = iota
+	NUM
+	LOWER
+	UPPER
+	ALPHA
 )
 
 type CaptchaImage struct {
@@ -72,11 +80,8 @@ func NewCaptchaImage(bgColor color.RGBA) *CaptchaImage {
 }
 
 func (captcha *CaptchaImage) SetSize(x, y int) {
-	m := image.NewNRGBA(image.Rect(0, 0, x, y))
-	draw.Draw(m, m.Bounds(), &image.Uniform{captcha.bgColor}, image.ZP, draw.Src)
 	captcha.height = y
 	captcha.width = x
-	captcha.nrgba = m
 }
 
 func (captcha *CaptchaImage) SetDisturbance(complex int) {
@@ -87,13 +92,13 @@ func (captcha *CaptchaImage) SetLine(i int) {
 }
 
 //生成图片对象
-func (captcha *CaptchaImage) Create(i int) (image.Image, string) {
+func (captcha *CaptchaImage) Create(i int, complex int) (image.Image, string) {
 	captcha.DrawNoise(captcha.Complex)
 	captcha.DrawTextNoise(captcha.Complex)
-	str := RandText(i)
+	str := RandText(i, complex)
 	captcha.DrawText(str)
 	captcha.Drawline(captcha.line)
-	captcha.DrawBorder(ColorToRGB(0x17A7A7A))
+	//captcha.DrawBorder(ColorToRGB(0x17A7A7A))
 	captcha.DrawHollowLine()
 	return captcha.nrgba, str
 }
@@ -210,8 +215,10 @@ func (captcha *CaptchaImage) DrawBorder(borderColor color.RGBA) *CaptchaImage {
 
 //画噪点
 func (captcha *CaptchaImage) DrawNoise(complex int) *CaptchaImage {
+	captcha.nrgba = image.NewNRGBA(image.Rect(0, 0, captcha.width, captcha.height))
+	draw.Draw(captcha.nrgba, captcha.nrgba.Bounds(), &image.Uniform{captcha.bgColor}, image.ZP, draw.Src)
 	density := 18
-	if complex == LOWER {
+	if complex == NORMAL {
 		density = 28
 	} else if complex == MEDIUM {
 		density = 18
@@ -245,7 +252,7 @@ func (captcha *CaptchaImage) DrawTextNoise(complex int) error {
 		density = 1000
 	}
 
-	maxSize := (captcha.height*captcha.width)/density - 1
+	maxSize := (captcha.height * captcha.width) / density
 
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 
@@ -262,7 +269,7 @@ func (captcha *CaptchaImage) DrawTextNoise(complex int) error {
 		rw := r.Intn(captcha.width)
 		rh := r.Intn(captcha.height)
 
-		text := RandText(1)
+		text := RandText(1, ALL)
 		fontSize := rawFontSize/2 + float64(r.Intn(5))
 
 		c.SetSrc(image.NewUniform(RandLightColor()))
@@ -285,6 +292,7 @@ func (captcha *CaptchaImage) DrawTextNoise(complex int) error {
 
 //写字
 func (captcha *CaptchaImage) DrawText(text string) error {
+
 	c := freetype.NewContext()
 	c.SetDPI(*dpi)
 
@@ -317,8 +325,6 @@ func (captcha *CaptchaImage) DrawText(text string) error {
 		if err != nil {
 			return err
 		}
-		//pt.Y += c.PointToFixed(*size * *spacing)
-		//pt.X += c.PointToFixed(*size);
 	}
 	return nil
 
@@ -342,7 +348,7 @@ func RandFontFamily() (*truetype.Font, error) {
 //随机生成深色系
 func RandDeepColor() color.RGBA {
 	randColor := RandColor()
-	increase := float64(0 + r.Intn(65))
+	increase := float64(30 + r.Intn(55))
 	red := math.Abs(math.Min(float64(randColor.R)-increase, 255))
 	green := math.Abs(math.Min(float64(randColor.G)-increase, 255))
 	blue := math.Abs(math.Min(float64(randColor.B)-increase, 255))
@@ -376,7 +382,18 @@ func RandColor() color.RGBA {
 }
 
 //生成随机字体
-func RandText(num int) string {
+func RandText(num int, complex int) string {
+	var txtChars string
+	switch complex {
+	case ALL:
+		txtChars = ALNUM
+	case UPPER:
+		txtChars = ALNUM[:26]
+	case LOWER:
+		txtChars = ALNUM[26:52]
+	case NUM:
+		txtChars = ALNUM[52:]
+	}
 	textNum := len(txtChars)
 	text := ""
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
