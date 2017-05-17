@@ -2,9 +2,6 @@ package gocaptcha
 
 import (
 	"flag"
-	"github.com/golang/freetype"
-	"github.com/golang/freetype/truetype"
-	"golang.org/x/image/font"
 	"image"
 	"image/color"
 	"image/draw"
@@ -14,6 +11,10 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	"github.com/golang/freetype"
+	"github.com/golang/freetype/truetype"
+	"golang.org/x/image/font"
 )
 
 var (
@@ -22,7 +23,7 @@ var (
 	FontFamily []string = make([]string, 0)
 )
 
-const ALNUM = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+const ALNUM = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 
 const (
 	//验证码噪点强度
@@ -37,6 +38,7 @@ const (
 	LOWER
 	UPPER
 	ALPHA
+	NUMUPPER
 )
 
 type CaptchaImage struct {
@@ -45,8 +47,11 @@ type CaptchaImage struct {
 	height  int
 	Complex int
 	line    int
+	border  bool
+	hollow  bool
 	color   *color.RGBA
 	bgColor *color.RGBA
+	text    int
 }
 
 //获取指定目录下的所有文件，不进入下一级目录搜索，可以匹配后缀过滤。
@@ -78,12 +83,22 @@ func NewCaptchaImage(bgColor *color.RGBA) *CaptchaImage {
 		line:    0,
 		color:   bgColor,
 		bgColor: bgColor,
+		hollow:  true,
+		border:  true,
+		text:    ALL,
 	}
 }
 
 func (captcha *CaptchaImage) SetSize(x, y int) {
 	captcha.height = y
 	captcha.width = x
+}
+
+func (captcha *CaptchaImage) SetHollow(x bool) {
+	captcha.hollow = x
+}
+func (captcha *CaptchaImage) SetBorder(x bool) {
+	captcha.border = x
 }
 
 func (captcha *CaptchaImage) SetDisturbance(complex int) {
@@ -100,8 +115,12 @@ func (captcha *CaptchaImage) Create(i int, complex int) (image.Image, string) {
 	str := RandText(i, complex)
 	captcha.DrawText(str)
 	captcha.Drawline(captcha.line)
-	//captcha.DrawBorder(ColorToRGB(0x17A7A7A))
-	captcha.DrawHollowLine()
+	if captcha.border {
+		captcha.DrawBorder(ColorToRGB(0x17A7A7A))
+	}
+	if captcha.hollow {
+		captcha.DrawHollowLine()
+	}
 	return captcha.nrgba, str
 }
 
@@ -354,7 +373,7 @@ func RandFontFamily() (*truetype.Font, error) {
 //随机生成深色系
 func RandDeepColor() color.RGBA {
 	randColor := RandColor()
-	increase := float64(30 + r.Intn(55))
+	increase := float64(60 + r.Intn(25))
 	red := math.Abs(math.Min(float64(randColor.R)-increase, 255))
 	green := math.Abs(math.Min(float64(randColor.G)-increase, 255))
 	blue := math.Abs(math.Min(float64(randColor.B)-increase, 255))
@@ -364,9 +383,9 @@ func RandDeepColor() color.RGBA {
 //随机生成浅色
 func RandLightColor() color.RGBA {
 
-	red := r.Intn(100) + 155
-	green := r.Intn(100) + 155
-	blue := r.Intn(100) + 155
+	red := r.Intn(55) + 200
+	green := r.Intn(55) + 200
+	blue := r.Intn(55) + 200
 	return color.RGBA{R: uint8(red), G: uint8(green), B: uint8(blue), A: uint8(255)}
 }
 
@@ -376,10 +395,10 @@ func RandColor() color.RGBA {
 	red := r.Intn(255)
 	green := r.Intn(255)
 	blue := r.Intn(255)
-	if (red + green) > 400 {
+	if (red + green) > 450 {
 		blue = 0
 	} else {
-		blue = 400 - green - red
+		blue = 450 - green - red
 	}
 	if blue > 255 {
 		blue = 255
@@ -394,11 +413,13 @@ func RandText(num int, complex int) string {
 	case ALL:
 		txtChars = ALNUM
 	case UPPER:
-		txtChars = ALNUM[:26]
+		txtChars = ALNUM[10:36]
 	case LOWER:
-		txtChars = ALNUM[26:52]
+		txtChars = ALNUM[36:62]
 	case NUM:
-		txtChars = ALNUM[52:]
+		txtChars = ALNUM[0:10]
+	case NUMUPPER:
+		txtChars = ALNUM[0:36]
 	}
 	textNum := len(txtChars)
 	text := ""
