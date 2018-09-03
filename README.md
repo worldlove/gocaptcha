@@ -32,7 +32,7 @@
 ```
 //初始化配置
 func init() {
-	gocaptcha.ReadFonts("fonts", ".ttf") //配置字体目录
+	// gocaptcha.ReadFonts("fonts", ".ttf") //配置字体目录
 	cap = gocaptcha.NewCaptchaImage(*image.RGBA) //配置背景色, 如果设置为nil, 则随机生成
 	cap.SetSize(128, 60) //配置图片大小(x, y)
 	cap.SetLine(1)       //配置干扰线条数

@@ -23,6 +23,10 @@ var (
 	FontFamily []string = make([]string, 0)
 )
 
+func init() {
+	ReadFonts("./fonts", ".ttf")
+}
+
 const ALNUM = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 
 const (
