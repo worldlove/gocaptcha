@@ -24,7 +24,7 @@ var (
 )
 
 func init() {
-	ReadFonts("./fonts", ".ttf")
+	ReadFonts("fonts", ".ttf")
 }
 
 const ALNUM = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
@@ -114,8 +114,8 @@ func (captcha *CaptchaImage) SetLine(i int) {
 
 //生成图片对象
 func (captcha *CaptchaImage) Create(i int, complex int) (image.Image, string) {
-	captcha.DrawNoise(captcha.Complex)
-	captcha.DrawTextNoise(captcha.Complex)
+	captcha.DrawNoise(complex)
+	captcha.DrawTextNoise(complex)
 	str := RandText(i, complex)
 	captcha.DrawText(str)
 	captcha.Drawline(captcha.line)
@@ -240,7 +240,7 @@ func (captcha *CaptchaImage) DrawBorder(borderColor color.RGBA) *CaptchaImage {
 
 //画噪点
 func (captcha *CaptchaImage) DrawNoise(complex int) *CaptchaImage {
-	if captcha.color == nil {
+	if captcha.bgColor == nil {
 		color := RandLightColor()
 		captcha.bgColor = &color
 	}
