@@ -23,10 +23,6 @@ var (
 	FontFamily []string = make([]string, 0)
 )
 
-func init() {
-	ReadFonts("fonts", ".ttf")
-}
-
 const ALNUM = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 
 const (
@@ -356,18 +352,25 @@ func (captcha *CaptchaImage) DrawText(text string) error {
 		}
 	}
 	return nil
-
 }
 
 //获取所及字体
-func RandFontFamily() (*truetype.Font, error) {
-	fontfile := FontFamily[r.Intn(len(FontFamily))]
+func RandFontFamily() (f *truetype.Font, err error) {
+	var fontBytes []byte
+	if len(FontFamily) != 0 {
+		fontfile := FontFamily[r.Intn(len(FontFamily))]
 
-	fontBytes, err := ioutil.ReadFile(fontfile)
-	if err != nil {
-		return &truetype.Font{}, err
+		fontBytes, err = ioutil.ReadFile(fontfile)
+		if err != nil {
+			return &truetype.Font{}, err
+		}
+	} else {
+		for _, v := range Fonts {
+			fontBytes = v
+			break
+		}
 	}
-	f, err := freetype.ParseFont(fontBytes)
+	f, err = freetype.ParseFont(fontBytes)
 	if err != nil {
 		return &truetype.Font{}, err
 	}
@@ -386,7 +389,6 @@ func RandDeepColor() color.RGBA {
 
 //随机生成浅色
 func RandLightColor() color.RGBA {
-
 	red := r.Intn(55) + 200
 	green := r.Intn(55) + 200
 	blue := r.Intn(55) + 200
@@ -395,7 +397,6 @@ func RandLightColor() color.RGBA {
 
 //生成随机颜色
 func RandColor() color.RGBA {
-
 	red := r.Intn(255)
 	green := r.Intn(255)
 	blue := r.Intn(255)
@@ -437,7 +438,6 @@ func RandText(num int, complex int) string {
 
 //添加一个字体路径到字体库
 func SetFontFamily(fontPath ...string) {
-
 	FontFamily = append(FontFamily, fontPath...)
 }
 
@@ -447,7 +447,6 @@ func SetFontFamily(fontPath ...string) {
  * output int red, green, blue
  **/
 func ColorToRGB(colorVal int) color.RGBA {
-
 	red := colorVal >> 16
 	green := (colorVal & 0x00FF00) >> 8
 	blue := colorVal & 0x0000FF
